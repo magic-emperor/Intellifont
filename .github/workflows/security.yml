@@ -34,6 +34,7 @@ jobs:
     - name: Build Rust (for CodeQL)
       if: matrix.language == 'rust'
       run: cargo build
+      working-directory: Rust/font-resolver
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
