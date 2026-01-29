@@ -1,0 +1,28 @@
+/target
+/debug
+/release
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-info.log*
+yarn-error.log*
+.eslintcache
+
+# NAPI-RS
+*.node
+bindings/node/*.node
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local

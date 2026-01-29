@@ -1,0 +1,14 @@
+[package]
+name = "font-sources"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-core = { path = "../font-core" }
+font-parser = { path = "../font-parser" }
+font-web-db = { path = "../font-web-db" }
+font-scanner = { path = "../font-scanner" }  # ADD THIS LINE
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
+walkdir = "2.5.0"

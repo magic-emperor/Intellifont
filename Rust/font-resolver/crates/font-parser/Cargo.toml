@@ -1,0 +1,10 @@
+# crates/font-parser/Cargo.toml
+[package]
+name = "font-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ttf-parser = "0.19"
+font-core = { path = "../font-core" }
+thiserror = "1.0"

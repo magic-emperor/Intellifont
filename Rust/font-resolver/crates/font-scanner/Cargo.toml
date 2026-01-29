@@ -1,0 +1,14 @@
+# crates/font-scanner/Cargo.toml
+[package]
+name = "font-scanner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-core = { path = "../font-core" }
+font-parser = { path = "../font-parser" }
+walkdir = "2.5.0"
+dirs = "5.0.1"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.50"

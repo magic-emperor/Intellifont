@@ -1,0 +1,10 @@
+# crates/font-normalizer/Cargo.toml
+[package]
+name = "font-normalizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.10"
+lazy_static = "1.4"
+font-core = { path = "../font-core" }

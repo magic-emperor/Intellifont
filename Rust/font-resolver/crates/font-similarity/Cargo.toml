@@ -1,0 +1,11 @@
+[package]
+name = "font-similarity"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-core = { path = "../font-core" }
+font-compressor = { path = "../font-compressor" }
+serde = { version = "1.0", features = ["derive"] }
+ordered-float = "2.10"
+petgraph = "0.6"

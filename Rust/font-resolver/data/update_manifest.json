@@ -1,0 +1,15 @@
+{
+  "changes": {
+    "added_fonts": [],
+    "removed_fonts": [],
+    "security_fixes": [],
+    "updated_fonts": []
+  },
+  "checksum": "to_be_calculated",
+  "compressed_size_bytes": 2097152,
+  "created_at": "2026-01-26T19:08:25.453038500+00:00",
+  "font_count": 1000,
+  "incremental_from": null,
+  "total_size_bytes": 51200000,
+  "version": "1.0.0"
+}

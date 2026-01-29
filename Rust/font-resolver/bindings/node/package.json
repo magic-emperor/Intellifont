@@ -1,0 +1,54 @@
+{
+  "name": "intellifont-engine",
+  "version": "0.1.0",
+  "description": "High-performance, Rust-powered font similarity engine for Node.js. Intelligent resolution with physical metric analysis, license guardrails, and layout preservation.",
+  "main": "index.js",
+  "bin": {
+    "intellifont": "./index.js"
+  },
+  "types": "index.d.ts",
+  "napi": {
+    "name": "intellifont-engine",
+    "package": {
+      "name": "intellifont-engine"
+    }
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --release",
+    "build:debug": "napi build",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "node test.js",
+    "version": "napi version"
+  },
+  "keywords": [
+    "font",
+    "typography",
+    "pdf",
+    "resolver",
+    "suggestion",
+    "matching",
+    "google-fonts",
+    "rust",
+    "napi"
+  ],
+  "author": "IntelliFont Team",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/magic-emperor/Intellifont.git"
+  },
+  "engines": {
+    "node": ">= 14"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "intellifont-engine.node",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@napi-rs/cli": "^2.16.0"
+  }
+}

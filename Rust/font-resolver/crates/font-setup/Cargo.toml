@@ -1,0 +1,10 @@
+[package]
+name = "font-setup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-core = { path = "../font-core" }
+dialoguer = "0.11"  # Removed the features
+directories = "5.0.1"
+toml = "0.8"

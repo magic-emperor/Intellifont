@@ -1,0 +1,8 @@
+[package]
+name = "full-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-normalizer = { path = "../../crates/font-normalizer" }
+font-scanner = { path = "../../crates/font-scanner" }

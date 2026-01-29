@@ -1,0 +1,9 @@
+[package]
+name = "comprehensive-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-resolver-engine = { path = "../../crates/font-resolver" }
+font-core = { path = "../../crates/font-core" }
+font-scanner = { path = "../../crates/font-scanner" }

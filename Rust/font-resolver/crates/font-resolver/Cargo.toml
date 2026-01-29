@@ -1,0 +1,25 @@
+[package]
+name = "font-resolver-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font-core = { path = "../font-core" }
+font-normalizer = { path = "../font-normalizer" }
+font-scanner = { path = "../font-scanner" }
+font-cache = { path = "../font-cache" }
+font-setup = { path = "../font-setup" }
+font-license = { path = "../font-license" }
+font-sources = { path = "../font-sources" }
+font-web-db = { path = "../font-web-db" }
+font-compressor = { path = "../font-compressor" }
+font-acquisition = { path = "../font-acquisition" }
+font-similarity = { path = "../font-similarity" }
+font-updater = { path = "../font-updater" }
+font-parser = { path = "../font-parser" }
+
+async-trait = "0.1"
+tokio = { version = "1.0", features = ["full", "macros"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"

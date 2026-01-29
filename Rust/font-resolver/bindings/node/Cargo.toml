@@ -1,0 +1,18 @@
+# bindings/node/Cargo.toml
+[package]
+name = "intellifont-engine"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+font-resolver-engine = { path = "../../crates/font-resolver" }
+font-core = { path = "../../crates/font-core" }
+font-normalizer = { path = "../../crates/font-normalizer" }
+napi = { version = "2.16", features = ["async", "serde-json"] }
+napi-derive = "2.16"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
