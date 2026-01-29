@@ -1,6 +1,6 @@
 {
   "name": "intellifont-engine",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "High-performance, Rust-powered font similarity engine for Node.js. Intelligent resolution with physical metric analysis, license guardrails, and layout preservation.",
   "main": "index.js",
   "bin": {
@@ -17,7 +17,6 @@
     "artifacts": "napi artifacts",
     "build": "napi build --release",
     "build:debug": "napi build",
-    "prepublishOnly": "napi prepublish -t npm",
     "test": "node test.js",
     "version": "napi version"
   },
@@ -50,5 +49,10 @@
   ],
   "devDependencies": {
     "@napi-rs/cli": "^2.16.0"
+  },
+  "optionalDependencies": {
+    "intellifont-engine-win32-x64-msvc": "0.1.0",
+    "intellifont-engine-darwin-x64": "0.1.0",
+    "intellifont-engine-linux-x64-gnu": "0.1.0"
   }
 }
