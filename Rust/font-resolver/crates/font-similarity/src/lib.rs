@@ -149,13 +149,40 @@ impl FontSimilarityEngine {
         fonts: &[FontDescriptor],
         limit_per_tier: usize,
     ) -> TieredMatchResult {
+        self.find_matches_internal(Some(request), None, fonts, limit_per_tier)
+    }
+
+    pub fn find_matches_by_metrics(
+        &self,
+        metrics: &font_core::FontMetrics,
+        fonts: &[FontDescriptor],
+        limit: usize,
+    ) -> Vec<FontMatch> {
+        let result = self.find_matches_internal(None, Some(metrics), fonts, limit);
+        result.matches
+    }
+
+    fn find_matches_internal(
+        &self,
+        request: Option<&FontRequest>,
+        target_metrics: Option<&font_core::FontMetrics>,
+        fonts: &[FontDescriptor],
+        limit_per_tier: usize,
+    ) -> TieredMatchResult {
         let mut exact_matches = Vec::new();
         let mut similar_matches = Vec::new();
         let mut low_matches = Vec::new();
         
         // Calculate scores for all fonts
         for font in fonts {
-            let (score, details) = self.calculate_comprehensive_similarity(request, font, true);
+            let (score, details) = if let Some(req) = request {
+                self.calculate_comprehensive_similarity(req, font, true)
+            } else if let Some(metrics) = target_metrics {
+                self.calculate_pure_metrics_similarity(metrics, font)
+            } else {
+                continue;
+            };
+
             let tier = MatchTier::from_score(score.overall);
             
             let match_result = FontMatch {
@@ -194,11 +221,46 @@ impl FontSimilarityEngine {
             .unwrap_or(MatchTier::Low(0.0));
         
         TieredMatchResult {
-            original_request: request.clone(),
+            original_request: request.cloned().unwrap_or_else(|| FontRequest {
+                original_name: "Metrics Query".to_string(),
+                normalized_name: "metrics_query".to_string(),
+                family: "Metrics".to_string(),
+                weight: 400,
+                style: font_core::FontStyle::Normal,
+                italic: false,
+                monospaced: false,
+            }),
             matches: all_matches,
             best_tier,
-            suggestions: Vec::new(), // Will be populated by caller
+            suggestions: Vec::new(),
         }
+    }
+
+    fn calculate_pure_metrics_similarity(
+        &self,
+        target: &font_core::FontMetrics,
+        font: &FontDescriptor,
+    ) -> (FontMatchScore, SimilarityDetails) {
+        let metrics_similarity = self.compare_metrics(target, font.metrics.as_ref());
+        
+        let score = FontMatchScore {
+            overall: metrics_similarity,
+            family: 0.0,
+            weight: 0.0,
+            style: 0.0,
+            monospaced: 0.0,
+            metrics: metrics_similarity,
+        };
+        
+        let details = SimilarityDetails {
+            name_similarity: 0.0,
+            weight_similarity: 0.0,
+            style_similarity: 0.0,
+            category_similarity: 0.0,
+            metrics_similarity,
+        };
+        
+        (score, details)
     }
     
     pub fn generate_suggestions(
@@ -305,15 +367,37 @@ impl FontSimilarityEngine {
         }
     }
     
-    fn calculate_metrics_similarity(&self, _request: &FontRequest, font: &FontDescriptor) -> f32 {
+    fn calculate_metrics_similarity(&self, request: &FontRequest, font: &FontDescriptor) -> f32 {
         // If no metrics available, return neutral score
         if font.metrics.is_none() {
-            return 0.7;
+            return 0.5;
         }
         
-        // Calculate metrics similarity
-        // This is simplified - real implementation would compare x-height, cap-height, etc.
-        0.8
+        // In name-based search, metrics are secondary
+        0.8 
+    }
+
+    fn compare_metrics(&self, target: &font_core::FontMetrics, candidate: Option<&font_core::FontMetrics>) -> f32 {
+        let candidate = match candidate {
+            Some(c) => c,
+            None => return 0.0,
+        };
+
+        // We compare ratios to handle different scaling (e.g. pixels vs em units)
+        let target_x_ratio = target.x_height as f32 / target.cap_height as f32;
+        let cand_x_ratio = candidate.x_height as f32 / candidate.cap_height as f32;
+        
+        let x_diff = (target_x_ratio - cand_x_ratio).abs();
+        
+        let target_width_ratio = target.average_width as f32 / target.cap_height as f32;
+        let cand_width_ratio = candidate.average_width as f32 / candidate.cap_height as f32;
+        
+        let width_diff = (target_width_ratio - cand_width_ratio).abs();
+        
+        // Combine differences (closer to 0 is better)
+        let total_diff = (x_diff * 0.6) + (width_diff * 0.4);
+        
+        (1.0 - (total_diff * 5.0)).max(0.0)
     }
     
     fn combine_scores(

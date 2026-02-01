@@ -1,0 +1,11 @@
+# crates/font-glyph/Cargo.toml
+[package]
+name = "font-glyph"
+version = "0.1.0"
+edition = "2021"
+description = "Glyph outline extraction and micro-signature generation for visual font identification"
+
+[dependencies]
+ttf-parser = "0.19"
+font-core = { path = "../font-core" }
+serde = { version = "1.0", features = ["derive"] }

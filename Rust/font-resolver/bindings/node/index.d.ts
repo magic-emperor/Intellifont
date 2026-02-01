@@ -41,3 +41,77 @@ export declare function getCacheStats(): JsCacheStats
 export declare function cleanupCache(aggressive: boolean): number
 export declare function listPinnedFonts(): Array<string>
 export declare function updateDatabase(): Promise<void>
+export interface JsVisualMatch {
+  family: string
+  subfamily?: string
+  confidence: number
+  matchedChars: Array<string>
+}
+export interface JsGlyphSignature {
+  character: string
+  aspectRatio: number
+  density: number
+  curveRatio: number
+  pointCount: number
+  xBalance: number
+  yBalance: number
+}
+export interface JsGlyphDbStats {
+  fontCount: number
+  charCount: number
+  uncompressedSizeMb: number
+  compressedSizeMb: number
+  compressionRatio: number
+  buildTimeSeconds: number
+}
+/**
+ * Identify a font visually by analyzing glyph shapes
+ *
+ * Uses the pre-built glyph signature database to find matching fonts.
+ * Pass multiple characters (e.g., "RQWM") for higher accuracy.
+ */
+export declare function identifyVisualFont(fontPath: string, characters: string, limit?: number | undefined | null): Array<JsVisualMatch>
+/**
+ * Identify a font visually from a memory buffer (e.g. file upload)
+ *
+ * Excellent for web servers where the font file is in memory.
+ */
+export declare function identifyVisualFontBuffer(fontData: Buffer, characters: string, limit?: number | undefined | null): Array<JsVisualMatch>
+/** AI-powered result for font similarity suggestions */
+export interface JsAiSuggestion {
+  /** The matched font family name */
+  family: string
+  /** The matched font subfamily (e.g., "Regular", "Bold") */
+  subfamily: string
+  /** AI confidence score (0.0 to 1.0) */
+  confidence: number
+  /** Similarity category: "exact", "high", "medium", "low" */
+  matchQuality: string
+}
+/**
+ * AI-powered font similarity suggestion
+ *
+ * Analyzes the visual DNA of a font file and finds similar fonts
+ * from the signature database using pattern recognition.
+ */
+export declare function aiSuggestSimilar(fontPath: string, limit?: number | undefined | null): Array<JsAiSuggestion>
+/** AI-powered font similarity from memory buffer */
+export declare function aiSuggestSimilarBuffer(fontData: Buffer, limit?: number | undefined | null): Array<JsAiSuggestion>
+/**
+ * Extract glyph signature from a font file
+ *
+ * Returns detailed signature information for a specific character.
+ */
+export declare function extractGlyphSignature(fontPath: string, character: string): JsGlyphSignature
+/**
+ * Build a glyph signature database from font files
+ *
+ * Indexes the specified font files with Brotli-11 compression.
+ */
+export declare function buildGlyphDatabase(fontPaths: Array<string>, outputPath: string): JsGlyphDbStats
+/**
+ * Compare the visual similarity of two font glyphs
+ *
+ * Returns a similarity score from 0.0 (different) to 1.0 (identical).
+ */
+export declare function compareGlyphSignatures(fontPathA: string, fontPathB: string, character: string): number

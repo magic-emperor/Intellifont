@@ -1,0 +1,12 @@
+# crates/font-visual-id/Cargo.toml
+[package]
+name = "font-visual-id"
+version = "0.1.0"
+edition = "2021"
+description = "Visual font identification engine with lightning-fast lookup"
+
+[dependencies]
+font-glyph = { path = "../font-glyph" }
+font-glyph-db = { path = "../font-glyph-db" }
+font-core = { path = "../font-core" }
+serde = { version = "1.0", features = ["derive"] }
