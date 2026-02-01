@@ -11,6 +11,9 @@ crate-type = ["cdylib"]
 font-resolver-engine = { path = "../../crates/font-resolver" }
 font-core = { path = "../../crates/font-core" }
 font-normalizer = { path = "../../crates/font-normalizer" }
+font-visual-id = { path = "../../crates/font-visual-id" }
+font-glyph = { path = "../../crates/font-glyph" }
+font-glyph-db = { path = "../../crates/font-glyph-db" }
 napi = { version = "2.16", features = ["async", "serde-json"] }
 napi-derive = "2.16"
 serde = { version = "1.0", features = ["derive"] }

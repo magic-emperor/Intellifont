@@ -14,13 +14,16 @@ members = [
     "crates/font-acquisition",
     "crates/font-similarity",
     "crates/font-updater",
+    "crates/font-glyph",      # NEW: Visual glyph signatures
+    "crates/font-glyph-db",   # NEW: Glyph database builder
+    "crates/font-visual-id",  # NEW: Visual font identification
     "bindings/node",
     "examples/cli",
-    "examples/comprehensive-test",
-    "examples/full-test",
-    "examples/resolver-test",
-    "examples/success-test",
 ]
+
+
+
+
 
 resolver = "2" 
 

@@ -1,0 +1,15 @@
+# crates/font-glyph-db/Cargo.toml
+[package]
+name = "font-glyph-db"
+version = "0.1.0"
+edition = "2021"
+description = "Glyph signature database builder with LSH indexing and Brotli compression"
+
+[dependencies]
+font-glyph = { path = "../font-glyph" }
+font-core = { path = "../font-core" }
+ttf-parser = "0.19"
+brotli = "3.3"
+bincode = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+

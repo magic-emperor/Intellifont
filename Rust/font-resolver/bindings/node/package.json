@@ -1,7 +1,7 @@
 {
   "name": "intellifont-engine",
-  "version": "1.0.0",
-  "description": "High-performance, Rust-powered font similarity engine for Node.js. Intelligent resolution with physical metric analysis, license guardrails, and layout preservation.",
+  "version": "1.2.0",
+  "description": "High-performance AI-powered visual font identification engine. Now includes AI Similarity Suggestion and Microservice Mode.",
   "main": "index.js",
   "bin": {
     "intellifont": "./index.js"
@@ -44,6 +44,7 @@
     "index.js",
     "index.d.ts",
     "intellifont-engine.node",
+    "setup.js",
     "README.md",
     "LICENSE"
   ],

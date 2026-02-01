@@ -9,6 +9,7 @@ use std::fs;
 use std::time::Duration;
 use indicatif::{ProgressBar, ProgressStyle};
 use colored::*;
+use tiny_http;
 use serde_json;
 
 #[tokio::main]
@@ -773,6 +774,492 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Already handled at the beginning
         }
         
+        Some(Commands::Identify { path, chars, db, verbose, json }) => {
+            if !json {
+                println!("👁️  IDENTIFYING FONT VISUALLY");
+                println!("{}", "=".repeat(40));
+            }
+            
+            let db_path = db.unwrap_or_else(|| PathBuf::from("data/glyph_signatures.bin"));
+            
+            if !db_path.exists() {
+                if json {
+                    println!("{{ \"error\": \"Glyph database not found\" }}");
+                } else {
+                    println!("❌ Glyph database not found at: {}", db_path.display());
+                    println!("   Run 'fr build-glyph-db' to create it.");
+                }
+                return Ok(());
+            }
+            
+            if !path.exists() {
+                if json {
+                    println!("{{ \"error\": \"Font file not found\" }}");
+                } else {
+                    println!("❌ Font file not found: {}", path.display());
+                }
+                return Ok(());
+            }
+            
+            if !json {
+                println!("📦 Loading database...");
+            }
+            let identifier = match font_visual_id::VisualIdentifier::from_file(&db_path) {
+                Ok(id) => id,
+                Err(e) => {
+                    if json {
+                        println!("{{ \"error\": \"Failed to load database: {}\" }}", e);
+                    } else {
+                        println!("❌ Failed to load database: {}", e);
+                    }
+                    return Ok(());
+                }
+            };
+
+            if verbose && !json {
+                println!("\n🔬 SIGNATURE ANALYSIS (The 'DNA' of the font)");
+                println!("{}", "-".repeat(40));
+                
+                // Extract signature for first char to show details
+                if let Some(first_char) = chars.chars().next() {
+                    println!("Analyzing character: '{}'", first_char);
+                     match identifier.extract_signature(&path, first_char) {
+                         Ok(sig) => {
+                             println!("  • Aspect Ratio: {:3} (Width/Height profile)", sig.aspect_ratio);
+                             println!("  • Density:      {:3}/255 (Ink coverage)", sig.density);
+                             println!("  • Stroke Width: {:3}/255 (Estimated weight)", sig.stroke_width);
+                             println!("  • Curvature:    {:3}/255 (Curves vs Lines)", sig.curve_ratio);
+                             println!("  • Points:       {:3}     (Complexity)", sig.point_count);
+                             println!("  • Balance:      X={:3}, Y={:3} (Center of mass)", sig.x_balance, sig.y_balance);
+                             println!("  • Serifs:       {:3}/255 (Serif detection)", sig.serif_score);
+                             println!("  • LSH Hash:     0x{:04x} (Locality Bucket)", sig.feature_hash);
+                         }
+                         Err(e) => println!("  Failed to extract signature: {}", e),
+                     }
+                }
+                println!("{}", "-".repeat(40));
+            }
+            
+            if !json {
+                println!("\n🔍 Analyzing font: {}", path.display());
+                println!("   Characters: {}", chars);
+            }
+            
+            match identifier.identify_multi(&path, &chars, 5) {
+                Ok(results) => {
+                    if json {
+                         println!("{}", serde_json::to_string_pretty(&results).unwrap_or_default());
+                    } else {
+                        if results.is_empty() {
+                            println!("❌ No matches found.");
+                        } else {
+                            println!("\n✅ MATCHES FOUND");
+                            println!("{}", "-".repeat(40));
+                            for (i, result) in results.iter().enumerate() {
+                                // Simple manual color interpolation
+                                let confidence = result.confidence * 100.0;
+                                let score_str = format!("{:.1}%", confidence);
+                                
+                                let colored_score = if confidence > 90.0 {
+                                    score_str.green().bold()
+                                } else if confidence > 70.0 {
+                                    score_str.yellow()
+                                } else if confidence > 50.0 {
+                                    score_str.yellow().dimmed()
+                                } else {
+                                    score_str.red()
+                                };
+                                
+                                println!("{}. {} {} ({})", 
+                                    i + 1, 
+                                    result.family.bold(),
+                                    result.subfamily.as_deref().unwrap_or("").dimmed(),
+                                    colored_score
+                                );
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    if json {
+                        println!("{{ \"error\": \"Identification failed: {}\" }}", e);
+                    } else {
+                        println!("❌ Identification failed: {}", e);
+                    }
+                }
+            }
+        }
+
+        Some(Commands::AiSuggest { path, limit, db, json }) => {
+            if !json {
+                println!("🤖 AI FONT SIMILARITY ANALYSIS");
+                println!("{}", "=".repeat(40));
+            }
+            
+            let db_path = db.unwrap_or_else(|| PathBuf::from("data/glyph_signatures.bin"));
+            
+            if !db_path.exists() {
+                if json {
+                    println!("{{ \"error\": \"AI model database not found\" }}");
+                } else {
+                    println!("❌ AI model database not found at: {}", db_path.display());
+                    println!("   Run 'fr build-glyph-db' to create it.");
+                }
+                return Ok(());
+            }
+            
+            if !path.exists() {
+                if json {
+                    println!("{{ \"error\": \"Font file not found\" }}");
+                } else {
+                    println!("❌ Font file not found: {}", path.display());
+                }
+                return Ok(());
+            }
+            
+            if !json {
+                println!("📦 Loading AI model...");
+            }
+            let identifier = match font_visual_id::VisualIdentifier::from_file(&db_path) {
+                Ok(id) => id,
+                Err(e) => {
+                    if json {
+                        println!("{{ \"error\": \"Failed to load AI model: {}\" }}", e);
+                    } else {
+                        println!("❌ Failed to load AI model: {}", e);
+                    }
+                    return Ok(());
+                }
+            };
+            
+            if !json {
+                println!("🔍 Analyzing font: {}", path.display());
+            }
+            
+            match identifier.identify_multi(&path, "RQWM", limit as usize) {
+                Ok(results) => {
+                    if json {
+                        // Build JSON with match_quality
+                        let suggestions: Vec<_> = results.iter().map(|r| {
+                            let quality = if r.confidence >= 0.95 { "exact" }
+                                else if r.confidence >= 0.85 { "high" }
+                                else if r.confidence >= 0.70 { "medium" }
+                                else { "low" };
+                            serde_json::json!({
+                                "family": r.family,
+                                "subfamily": r.subfamily,
+                                "confidence": r.confidence,
+                                "match_quality": quality
+                            })
+                        }).collect();
+                        println!("{}", serde_json::to_string_pretty(&suggestions).unwrap_or_default());
+                    } else {
+                        if results.is_empty() {
+                            println!("❌ No similar fonts found.");
+                        } else {
+                            println!("\n✨ AI SUGGESTIONS");
+                            println!("{}", "-".repeat(40));
+                            for (i, result) in results.iter().enumerate() {
+                                let confidence = result.confidence * 100.0;
+                                let quality = if confidence > 95.0 { "EXACT".green().bold() }
+                                    else if confidence > 85.0 { "HIGH".green() }
+                                    else if confidence > 70.0 { "MEDIUM".yellow() }
+                                    else { "LOW".red() };
+                                
+                                println!("{}. {} {} [{} - {:.1}%]", 
+                                    i + 1, 
+                                    result.family.bold(),
+                                    result.subfamily.as_deref().unwrap_or("").dimmed(),
+                                    quality,
+                                    confidence
+                                );
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    if json {
+                        println!("{{ \"error\": \"AI analysis failed: {}\" }}", e);
+                    } else {
+                        println!("❌ AI analysis failed: {}", e);
+                    }
+                }
+            }
+        }
+
+        Some(Commands::BuildWebDb { limit, output }) => {
+            println!("🌐 BUILDING WEB FONT DATABASE");
+            println!("{}", "=".repeat(40));
+            
+            use font_acquisition::{FontAcquisitionManager, FontsourceProvider};
+            
+            // Setup manager
+            let mut manager = FontAcquisitionManager::new();
+            manager.add_provider("fontsource", Box::new(FontsourceProvider::new()));
+            
+            println!("🔍 Searching for popular fonts...");
+            // Search for "sans" and "serif" to get a mix
+            let search_limit = limit / 2 + 1;
+            let sans = manager.parallel_search("sans", search_limit).await.unwrap_or_default();
+            let serif = manager.parallel_search("serif", search_limit).await.unwrap_or_default();
+            
+            let mut all_fonts = sans;
+            all_fonts.extend(serif);
+            all_fonts.truncate(limit);
+            
+            println!("   Found {} candidate fonts", all_fonts.len());
+            
+            if all_fonts.is_empty() {
+                println!("❌ No fonts found. Check internet connection.");
+                return Ok(());
+            }
+
+            // Setup temp dir in current directory
+            let temp_dir = PathBuf::from("temp_web_fonts");
+            if !temp_dir.exists() {
+                std::fs::create_dir(&temp_dir)?;
+            }
+            
+            println!("⬇️  Downloading and Indexing...");
+            let pb = ProgressBar::new(all_fonts.len() as u64);
+            pb.set_style(ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")?
+                .progress_chars("=>-"));
+                
+            let mut builder = font_glyph_db::GlyphDatabaseBuilder::new();
+            let mut success = 0;
+            
+            for font_data in all_fonts {
+                pb.set_message(format!("{}", font_data.family));
+                
+                // Download
+                match manager.download_and_verify(&font_data, font_core::FontFormat::Ttf, "Fontsource").await {
+                    Ok(descriptor) => {
+                        // Add to DB
+                        match builder.add_font_auto(&descriptor.path) {
+                            Ok(_) => success += 1,
+                            Err(_) => {}
+                        }
+                    }
+                    Err(_) => {
+                         // Ignore download failures, common with free APIs
+                    }
+                }
+                pb.inc(1);
+            }
+            pb.finish_with_message("Processing complete");
+            
+            println!("✅ Indexed {} fonts", success);
+            
+            println!("💾 Saving database to: {}", output.display());
+            if let Some(parent) = output.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            
+            match builder.save_to_file(&output) {
+                Ok(stats) => {
+                    println!("\n✅ WEB DATABASE BUILT SUCCESSFULLY");
+                    println!("{}", stats);
+                }
+                Err(e) => println!("❌ Failed to save database: {}", e),
+            }
+            
+            // Allow cleanup of temp dir (optional, user might want them?)
+             println!("🧹 Cleaning up temporary files...");
+             if let Err(e) = std::fs::remove_dir_all(&temp_dir) {
+                 println!("⚠️  Failed to remove temp dir: {}", e);
+             }
+        }
+
+
+        Some(Commands::BuildGlyphDb { source, output, compression: _, recursive }) => {
+            println!("🏗️  BUILDING GLYPH DATABASE");
+            println!("{}", "=".repeat(40));
+            
+            if !source.exists() {
+                println!("❌ Source directory not found: {}", source.display());
+                return Ok(());
+            }
+            
+            println!("📂 Scanning fonts in: {}", source.display());
+            let mut font_paths = Vec::new();
+            
+            // Simple recursive walker
+            let mut dirs = vec![source];
+            while let Some(dir) = dirs.pop() {
+                if let Ok(entries) = std::fs::read_dir(dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            if recursive {
+                                dirs.push(path);
+                            }
+                        } else {
+                            if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+                                match ext.to_lowercase().as_str() {
+                                    "ttf" | "otf" => font_paths.push(path),
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            println!("   Found {} font files", font_paths.len());
+            
+            if font_paths.is_empty() {
+                println!("⚠️  No fonts found. Exiting.");
+                return Ok(());
+            }
+            
+            println!("🔨 Indexing fonts (this may take a while)...");
+            let pb = ProgressBar::new(font_paths.len() as u64);
+            pb.set_style(ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")?
+                .progress_chars("=>-"));
+                
+            let mut builder = font_glyph_db::GlyphDatabaseBuilder::new();
+            let mut success_count = 0;
+            
+            for path in &font_paths {
+                pb.set_message(path.file_name().unwrap_or_default().to_string_lossy().to_string());
+                match builder.add_font_auto(&path) {
+                    Ok(_) => success_count += 1,
+                    Err(_) => {} // Skip errors
+                }
+                pb.inc(1);
+            }
+            pb.finish_with_message("Indexing complete");
+            println!("✅ Indexed {}/{} fonts", success_count, font_paths.len());
+            
+            println!("💾 Saving database to: {}", output.display());
+            if let Some(parent) = output.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            
+            match builder.save_to_file(&output) {
+                Ok(stats) => {
+                    println!("\n✅ DATABASE BUILT SUCCESSFULLY");
+                    println!("{}", stats);
+                }
+                Err(e) => println!("❌ Failed to save database: {}", e),
+            }
+        }
+
+        Some(Commands::GlyphDbStats { path }) => {
+            println!("📊 GLYPH DATABASE STATISTICS");
+            println!("{}", "=".repeat(40));
+            
+            if !path.exists() {
+                println!("❌ Database file not found: {}", path.display());
+                return Ok(());
+            }
+            
+            match font_visual_id::VisualIdentifier::from_file(&path) {
+                Ok(identifier) => {
+                    let stats = identifier.database_stats();
+                    println!("{}", stats);
+                    
+                    let metadata = std::fs::metadata(&path)?;
+                    println!("  File size: {:.2}MB", metadata.len() as f64 / 1_000_000.0);
+                }
+                Err(e) => println!("❌ Failed to load database: {}", e),
+            }
+        }
+
+        Some(Commands::Serve { port, host, db }) => {
+            let server = match tiny_http::Server::http(format!("{}:{}", host, port)) {
+                Ok(s) => s,
+                Err(e) => {
+                    println!("❌ Failed to start server: {}", e);
+                    return Ok(());
+                }
+            };
+            
+            println!("🚀 intelliFont AI Microservice running on {}:{}", host, port);
+            println!("📦 Using database: {}", db.display());
+            println!("💡 Use POST /api/identify with raw binary font data to identify");
+            println!("💡 Use POST /api/ai-suggest with raw binary font data for similarity");
+            
+            // Load database into memory once
+            let identifier = match font_visual_id::VisualIdentifier::from_file(&db) {
+                Ok(id) => id,
+                Err(e) => {
+                    println!("❌ Failed to load AI model database: {}", e);
+                    return Ok(());
+                }
+            };
+
+            for mut request in server.incoming_requests() {
+                let response = match (request.method(), request.url()) {
+                    (&tiny_http::Method::Get, "/health") => {
+                        tiny_http::Response::from_string("{\"status\": \"ok\", \"engine\": \"intelliFont\"}")
+                            .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap())
+                    },
+                    (&tiny_http::Method::Post, "/api/identify") | (&tiny_http::Method::Post, "/api/ai-suggest") => {
+                        let is_suggest = request.url().contains("ai-suggest");
+                        
+                        // Get binary data
+                        let mut body = Vec::new();
+                        let _ = request.as_reader().read_to_end(&mut body);
+                        
+                        if body.is_empty() {
+                            tiny_http::Response::from_string("{\"error\": \"Empty body\"}")
+                                .with_status_code(400)
+                                .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap())
+                        } else {
+                            // Temporary identifying
+                            let tmp_id = format!("serve_{}.bin", chrono::Local::now().timestamp_nanos_opt().unwrap_or(0));
+                            let tmp_path = std::env::temp_dir().join(tmp_id);
+                            
+                            if let Err(e) = std::fs::write(&tmp_path, body) {
+                                tiny_http::Response::from_string(format!("{{\"error\": \"FS error: {}\"}}", e))
+                                    .with_status_code(500)
+                                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap())
+                            } else {
+                                let results = if is_suggest {
+                                    match identifier.identify_multi(&tmp_path, "RQWM", 5) {
+                                        Ok(res) => {
+                                            let suggestions: Vec<_> = res.iter().map(|r| {
+                                                let quality = if r.confidence >= 0.95 { "exact" }
+                                                    else if r.confidence >= 0.85 { "high" }
+                                                    else if r.confidence >= 0.70 { "medium" }
+                                                    else { "low" };
+                                                serde_json::json!({
+                                                    "family": r.family,
+                                                    "subfamily": r.subfamily,
+                                                    "confidence": r.confidence,
+                                                    "match_quality": quality
+                                                })
+                                            }).collect();
+                                            serde_json::to_string(&suggestions).unwrap_or_default()
+                                        },
+                                        Err(e) => format!("{{\"error\": \"{}\"}}", e),
+                                    }
+                                } else {
+                                    match identifier.identify_multi(&tmp_path, "RQWM", 5) {
+                                        Ok(res) => serde_json::to_string(&res).unwrap_or_default(),
+                                        Err(e) => format!("{{\"error\": \"{}\"}}", e),
+                                    }
+                                };
+                                
+                                let _ = std::fs::remove_file(tmp_path);
+                                
+                                tiny_http::Response::from_string(results)
+                                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap())
+                            }
+                        }
+                    },
+                    _ => tiny_http::Response::from_string("{\"error\": \"Not Found\"}")
+                        .with_status_code(404)
+                        .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap())
+                };
+                let _ = request.respond(response);
+            }
+        }
+
+
         None => {
             println!("{}", "🎨 FONT RESOLVER CLI".bold());
             println!("Version: {}", env!("CARGO_PKG_VERSION"));
@@ -1272,6 +1759,106 @@ enum Commands {
     
     /// Display full version, build architecture, and capability information.
     Version,
+
+    /// Identify a font visually using extracted glyph signatures
+    #[command(name = "identify", alias = "id")]
+    Identify {
+        /// Path to the font file to identify
+        path: PathBuf,
+        
+        /// Characters to analyze (e.g. "RQWM") for higher accuracy
+        #[arg(short, long, default_value = "RQWM")]
+        chars: String,
+        
+        /// Path to glyph database (optional, defaults to data/glyph_signatures.bin)
+        #[arg(long)]
+        db: Option<PathBuf>,
+        
+        /// Show detailed signature data ("what is being passed")
+        #[arg(short, long)]
+        verbose: bool,
+
+        /// Output results as JSON for programmatic use
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// AI-powered font similarity finder
+    /// 
+    /// Analyzes the visual DNA of a font and suggests similar alternatives
+    /// from the signature database using pattern recognition.
+    #[command(name = "ai-suggest")]
+    AiSuggest {
+        /// Path to the font file to analyze
+        path: PathBuf,
+        
+        /// Maximum number of suggestions to return
+        #[arg(short, long, default_value = "5")]
+        limit: u32,
+        
+        /// Path to glyph database (optional)
+        #[arg(long)]
+        db: Option<PathBuf>,
+        
+        /// Output results as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    
+    /// Build a glyph signature database from a directory of fonts
+    #[command(name = "build-glyph-db")]
+    BuildGlyphDb {
+        /// Directory containing fonts to index
+        source: PathBuf,
+        
+        /// Output path for the database file
+        #[arg(short, long, default_value = "data/glyph_signatures.bin")]
+        output: PathBuf,
+        
+        /// Compression level (1-11)
+        #[arg(long, default_value = "11")]
+        compression: u32,
+        
+        /// Recursively search for fonts
+        #[arg(short, long)]
+        recursive: bool,
+    },
+
+    /// Download and index popular web fonts (Google Fonts via Fontsource)
+    #[command(name = "build-web-db")]
+    BuildWebDb {
+        /// Limit number of fonts to download (default: 50)
+        #[arg(short, long, default_value = "50")]
+        limit: usize,
+        
+        /// Output path
+        #[arg(short, long, default_value = "data/web_glyph_signatures.bin")]
+        output: PathBuf,
+    },
+
+    
+    /// Show statistics about a glyph database
+    GlyphDbStats {
+        /// Path to the database file
+        #[arg(default_value = "data/glyph_signatures.bin")]
+        path: PathBuf,
+    },
+
+    /// Run as a high-performance HTTP microservice
+    #[command(name = "serve")]
+    Serve {
+        /// Port to listen on
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+
+        /// Host to bind to
+        #[arg(short = 'H', long, default_value = "127.0.0.1")]
+        host: String,
+
+        /// Path to glyph database
+        #[arg(long, default_value = "data/glyph_signatures.bin")]
+        db: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
