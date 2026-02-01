@@ -1,32 +1,34 @@
 # intelliFont Engine
 
-**The Ultimate Professional Font Recognition & Suggestion Toolkit.**
+**The Ultimate Professional Font Identification Toolkit.**
 
-`intellifont-engine` is a high-performance, Rust-powered engine designed for mission-critical design applications. Whether you are building a PDF editor, a web builder, or a design tool, this engine ensures that no font ever goes missing and every layout remains pixel-perfect.
+`intellifont-engine` is a high-performance, Rust-powered engine designed to **visually identify** unknown font files. Whether you are building a design tool or a font management system, this engine tells you exactly what font family a file belongs to by analyzing its glyph shapes.
 
 ---
 
 ## Why intelliFont?
+**intelliFont** uses **Visual DNA Analysis**—measuring the physical curves, stroke width, and ink density of the characters—to fingerprint and identify the font family with high precision.
 
-Traditional font matching relies on exact string comparisons, which fail if the user's system names a font slightly differently (e.g., "HelveticaNeue" vs "Helvetica Neue"). 
+Traditional tools rely on reading metadata (names), which can be missing, scrambled, or incorrect (e.g., "subset.ttf").
 
-**intelliFont** uses **Biometric Metric Matching**—analyzing the physical architecture of the font itself (ascenders, descenders, x-height, and cap-height)—to find the perfect match or the best possible substitute.
+
 
 ### Key Capabilities:
-- **Blazing Speed**: Rust-core execution means sub-1ms response times for local lookups.
-- **Pre-Seeded Database**: Comes with **2,000+ popular font signatures** (Google Fonts, System Standards) embedded in a highly compressed 4.5MB binary asset.
-- **Layout Authority**: Exports precise physical metrics to ensure PDF and Canvas layouts never shift during font substitution.
-- **Hybrid Intelligence**: Scans local OS fonts and queries global CDNs (Google, Fontsource) in parallel.
-- **Legal Guardrails**: Real-time license detection for OFL, Apache, and commercial fonts, protecting users from legal risks.
+- **Visual Recognition**: Identifies fonts based on *geometry*, not file names.
+- **AI Similarity Suggestion**: **[NEW]** Find visually similar alternatives matching the "AI DNA" of a font.
+- **Microservice Ready**: **[NEW]** Run as a high-performance HTTP server for any-language integration.
+- **Raw Buffer Support**: Works directly with memory buffers from web uploads.
+- **Sub-millisecond Speed**: Visual analysis takes <1ms per file.
+- **Privacy First**: Analysis happens entirely offline/on-server.
 
 ---
 
 ## Architecture Overview
 
 The engine is built on a "Service-Core" architecture:
-1.  **The Rust Core**: Handles heavy-duty binary parsing, Brotli decompression of the signature database, and parallel network queries using Tokio.
-2.  **The NAPI-RS Bridge**: Provides a zero-copy memory bridge between Rust and Node.js, ensuring that huge font lists don't cause garbage collection lag.
-3.  **The Metadata Cache**: A dual-layer cache (Memory + Persistent Disk) that learns from every search, making web results instant and offline-ready on the next launch.
+1.  **The Rust Core**: Performs the heavy-duty mathematical analysis of glyph curves.
+2.  **The NAPI-RS Bridge**: Exposes this power to Node.js as a simple native function.
+3.  **The Signature Database**: A highly-compressed binary index of known font shapes (Google Fonts, System Fonts).
 
 ---
 
@@ -43,75 +45,62 @@ Powerful font management directly from your terminal:
 ```bash
 npm install -g intellifont-engine
 ```
-
----
-
-## 🛠️ CLI Usage (The 'intellifont' command)
-
-Once installed globally, `intellifont` provides a robust set of tools for developers and system administrators.
-
-### Core Commands
-
-| Command | Description |
-| :--- | :--- |
-| `intellifont stats` | Display exhaustive engine metrics: font counts, database compression ratio, and cache health. |
-| `intellifont resolve "Font"` | Performs a high-speed resolution using local assets and the metadata cache. |
-| `intellifont tiered "Font"` | Advanced similarity analysis. Returns results in 90% (Exact) and 80% (Similar) tiers. |
-| `intellifont tiered "Font" --internet` | Activate global CDN lookup (Google Fonts, Fontsource) if local matches are insufficient. |
-| `intellifont find-similar "Font"` | Identify fonts that are visually or metrically similar to a target baseline font. |
-| `intellifont check-license "Font"` | Analyze licensing metadata for commercial safety and provide free equivalents. |
-| `intellifont scan [--detailed]` | Deep recursive scan of system font directories to index new assets. |
-| `intellifont update` | Synchronize local signatures with the global repository and regenerate binary indexes. |
-| `intellifont setup` | Guided 3-step configuration for memory limits and provider priorities. |
-| `intellifont version` | Display engine version, build architecture, and capability flags. |
-
-### Cache Management (`intellifont cache <command>`)
-
-| Subcommand | Description |
-| :--- | :--- |
-| `cache stats` | View hit rates, memory footprint, and disk usage of the local cache. |
-| `cache cleanup` | Remove stale entries. Use `--aggressive` to clear single-use fonts. |
-| `cache pin "Font"` | Lock a font permanently in the cache so it is never evicted. |
-| `cache unpin "Font"` | Release a font from the permanent cache lock. |
-| `cache list` | List all manually and automatically pinned (highly used) fonts. |
-| `cache suggest` | Analyze usage patterns and suggest non-pinned entries for manual removal. |
-
-### Configuration (`intellifont config <command>`)
-
-| Subcommand | Description |
-| :--- | :--- |
-| `config show` | View current engine limits (Memory, Disk, Web Access). |
-| `config set <key> <val>` | Directly modify configuration (e.g., `intellifont config set memory_limit 16`). |
-| `config reset` | Restore all engine settings to factory defaults. |
-| `config export <path>` | Export your current setup to a `.toml` file for team sharing. |
-| `config import <path>` | Load a shared configuration file to synchronize settings across environments. |
-
 ---
 
 ## JavaScript API
 
 `intellifont-engine` provides a simple, Promise-based API for Node.js environments.
 
-### `getEnhancedSuggestions(name, useWebFonts)`
-The primary entry point for building "Suggested Fonts" dropdowns.
+### `identify_visual_font(path, chars, limit)`
+**[NEW]** Identify a font file visually using its glyph shape signatures.
 
 ```javascript
-const { getEnhancedSuggestions } = require('intellifont-engine');
+const { identify_visual_font } = require('intellifont-engine');
 
-async function resolveFont(inputName) {
-  // Parallel search: Local System + Global Fontsource/Google
-  const results = await getEnhancedSuggestions(inputName, true);
-  
-  results.forEach(res => {
-    console.log(`Match Found: ${res.family}`);
-    console.log(`Similarity: ${(res.score * 100).toFixed(1)}%`);
-    
-    // License Guardrail
-    if (res.isCriticalLicenseWarning) {
-      console.warn("🚫 Commercial License Required - Consider a free alternative.");
-    }
-  });
-}
+// Identify an unknown file
+const results = identify_visual_font("./unknown_font.ttf", "RQWM", 5);
+
+console.log(results[0]);
+// {
+//   family: "Arial",
+//   subfamily: "Regular",
+//   confidence: 0.99,
+//   source: "Database"
+// }
+```
+
+### `identify_visual_font_buffer(buffer, chars, limit)`
+**[NEW]** Identify a font from valid font memory buffer (e.g. from file upload). No disk save required.
+
+```javascript
+const fs = require('fs');
+const { identify_visual_font_buffer } = require('intellifont-engine');
+
+// Simulate a file upload (Buffer)
+const buffer = fs.readFileSync("./uploaded_font.ttf");
+
+const matches = identify_visual_font_buffer(buffer, "RQWM", 5);
+console.log(matches[0]);
+// { family: "Roboto", confidence: 1.0, ... }
+```
+
+### `aiSuggestSimilar(path, limit)`
+**[NEW]** Find visually similar fonts using AI pattern matching.
+
+```javascript
+const { aiSuggestSimilar } = require('intellifont-engine');
+
+const suggestions = aiSuggestSimilar("./my_font.ttf", 5);
+console.log(suggestions[0]);
+// {
+//   family: "Consolas",
+//   confidence: 0.92,
+//   match_quality: "high"
+// }
+```
+
+### `aiSuggestSimilarBuffer(buffer, limit)`
+**[NEW]** Find similar fonts directly from memory buffer.
 ```
 
 ### `exportMetrics(fontName)`
@@ -119,30 +108,123 @@ Returns the physical "DNA" of a font. Essential for layout-stable PDF generators
 
 ```javascript
 const { exportMetrics } = require('intellifont-engine');
-
 const metrics = exportMetrics("Inter");
-// Returns:
-// {
-//   family: "Inter",
-//   ascender: 0.72,
-//   descender: -0.21,
-//   capHeight: 0.68,
-//   widthFactor: 1.05
-// }
 ```
 
 ---
 
-## Advanced Features
+## 📦 Integration: Real-World Web App
 
-### Triple-Layer Safety Net
-If a font is missing, intelliFont executes its survival strategy:
-1.  **Direct Local Match**: Scans the user's OS fonts instantly.
-2.  **CDN Deep Search**: Queries Google Fonts and Fontsource in parallel (2-second timeout).
-3.  **Metric Substitution**: If nowhere to be found, it analyzes the missing font's metrics and finds a "Twin" on the local system to prevent layout breaking.
+Here is a complete example of how to integrate `intellifont-engine` into an **Express.js** backend to handle file uploads.
 
-### Learning Mode (Dynamic Caching)
-The engine learns your project's typography. Any font resolved from the web is automatically "fingerprinted" and stored in the **Persistent Disk Cache**. Next time you search for that font, it will be found instantly—even without an internet connection.
+### 1. Install Dependencies
+```bash
+npm install express multer intellifont-engine
+```
+
+### 2. Create the Backend Service (`server.js`)
+This service receives a file upload (font) and returns the identification result.
+
+```javascript
+const express = require('express');
+const multer = require('multer');
+const { identify_visual_font_buffer } = require('intellifont-engine');
+
+const app = express();
+// Use memory storage so we can access the buffer directly
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Endpoint: POST /api/identify
+app.post('/api/identify', upload.single('fontFile'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No font file uploaded" });
+        }
+
+        // 1. Get the Raw Buffer
+        const fontBuffer = req.file.buffer;
+
+        // 2. Identify the Font (Pass specific characters for better accuracy)
+        const results = identify_visual_font_buffer(fontBuffer, "RQWM", 5);
+
+        // 3. Return JSON to Frontend
+        res.json({ success: true, matches: results });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(3000, () => console.log('Server running on port 3000 🚀'));
+```
+
+### 3. Usage from Frontend
+```javascript
+const formData = new FormData();
+formData.append('fontFile', fileInput.files[0]);
+
+const response = await fetch('/api/identify', { method: 'POST', body: formData });
+const data = await response.json();
+console.log("Identified Font:", data.matches[0].family); 
+// Output: "Arial"
+```
+
+---
+
+## ❓ FAQ: Inputs & Performance
+
+**Q: Why do I need to pass the `.ttf/.otf` file? Can't I just pass text?**
+**A:** "Text" (like "Hello") is just a code (e.g., `U+0048`). It has no shape. The `.ttf` file contains the **mathematical curves** (geometry) that determine if it looks like Arial or Times New Roman. We need those curves to calculate the visual signature.
+
+**Q: Isn't uploading a font file slow/heavy?**
+**A:** No. Font files are vector graphics and are surprisingly small (~50KB - 200KB). Uploading a font buffer to your backend takes milliseconds.
+
+---
+
+## 🛠️ CLI Usage (The 'intellifont' command)
+
+Once installed globally, `intellifont` provides tools for visual identification and database management.
+
+| Command | Description |
+| :--- | :--- |
+| `intellifont identify "file.ttf"` | **Identify a font file visually** using its glyph signatures. |
+| `intellifont ai-suggest "file.ttf"` | **[AI]** Find visually similar alternatives for a font file. |
+| `intellifont serve --port 3000` | **[NEW]** Run as an HTTP microservice for universal integration. |
+| `intellifont build-web-db` | Download and index popular **Google Fonts/Web Fonts** automatically. |
+| `intellifont build-glyph-db <dir>` | Index a local directory of fonts into a compressed signature database. |
+| `intellifont stats` | Display engine metrics and database compression stats. |
+
+### JSON Output for Automation
+Add `--json` flag to get machine-readable output:
+```bash
+intellifont identify "file.ttf" --json
+# Returns: [{"family": "Arial", "confidence": 0.99, ...}]
+```
+
+---
+
+## 🐍 Python & Universal Integration
+
+Since `intellifont` is a standalone CLI tool, you can use it from **any language** (Python, Go, PHP, C#, Ruby) by calling the CLI and parsing JSON.
+
+**Python Example:**
+```python
+import subprocess
+import json
+
+def identify_font(file_path):
+    result = subprocess.run(
+        ["intellifont", "identify", file_path, "--json"],
+        capture_output=True, text=True
+    )
+    matches = json.loads(result.stdout)
+    return matches[0] if matches else None
+
+# Usage
+font = identify_font("./mystery.ttf")
+print(f"Identified: {font['family']} ({font['confidence']*100:.0f}% confidence)")
+```
+
 
 ---
 
