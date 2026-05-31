@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build artifacts
+dist/
+build/
+target/
+*.o
+*.a
+*.so
+*.dylib
+*.node
+
+# Rust
+/Rust/font-resolver/target/
+/Rust/font-resolver/bindings/*/target/
+.rustc_info.json
+Cargo.lock
+
+# WASM
+/Rust/font-resolver/bindings/wasm/
+wasm-pack/
+
+# Generated/Browser builds
+browser/
+bindings/node/browser/
+bindings/wasm/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Temp files
+*.tmp
+*.bak
+.cache/
+
+# Test artifacts
+test_*.png
+DEBUG-*.md
+TROUBLESHOOT-*.md
+TEST-REPORT-*.md
+EXTENSION-TESTING-*.md
+FIX-REPORT-*.md
+PUBLISH-CHECKLIST-*.md
+
+# Local workspace
+.agent/
+.planning/
+VisionDupe/
+data/
+scripts/
+server/
+packages/
+cleanup_readme.py

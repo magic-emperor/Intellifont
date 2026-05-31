@@ -1,0 +1,315 @@
+/* Intellifont overlay — scoped inside Shadow DOM, cannot leak into the page */
+
+:host {
+  all: initial;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Never wider than the viewport minus 40px margin (handles narrow windows + DevTools) */
+  max-width: min(360px, calc(100vw - 40px));
+}
+
+.if-overlay {
+  background: #1e1b4b;
+  border: 1px solid #4f46e5;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  color: #e0e7ff;
+  min-width: 260px;
+  width: 100%;
+  /* Scroll if the overlay is taller than the visible viewport */
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  animation: if-slide-in 0.18s ease;
+}
+
+@keyframes if-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.if-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #312e81;
+  border-bottom: 1px solid #4f46e5;
+}
+
+.if-logo {
+  font-weight: 700;
+  font-size: 14px;
+  color: #a5b4fc;
+  flex: 0 0 auto;
+}
+
+.if-source {
+  font-size: 11px;
+  color: #818cf8;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.if-close {
+  all: unset;
+  cursor: pointer;
+  color: #818cf8;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.if-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* ── Style badge ─────────────────────────────────────────────── */
+.if-style-badge {
+  padding: 5px 14px;
+  font-size: 11px;
+  color: #a5b4fc;
+  background: rgba(79,70,229,0.2);
+  border-bottom: 1px solid rgba(79,70,229,0.3);
+}
+.if-style-badge.if-italic { font-style: italic; }
+
+/* ── Results list ────────────────────────────────────────────── */
+.if-results {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+
+.if-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  transition: background 0.1s;
+}
+.if-result:hover { background: rgba(255,255,255,0.05); }
+.if-result.if-top { background: rgba(79,70,229,0.15); }
+
+.if-rank {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366f1;
+  width: 16px;
+  flex: 0 0 auto;
+  text-align: center;
+}
+.if-top .if-rank { color: #a5b4fc; }
+
+.if-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.if-family {
+  display: block;
+  font-weight: 600;
+  color: #e0e7ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.if-top .if-family { color: #fff; font-size: 14px; }
+
+.if-sub {
+  display: block;
+  font-size: 11px;
+  color: #818cf8;
+}
+
+.if-bar-wrap {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  margin-top: 4px;
+}
+.if-bar {
+  height: 100%;
+  background: #6366f1;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.if-top .if-bar { background: #a5b4fc; }
+
+.if-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: #818cf8;
+  width: 36px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.if-copy {
+  all: unset;
+  cursor: pointer;
+  color: #6366f1;
+  font-size: 15px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.if-copy:hover { background: rgba(255,255,255,0.1); color: #a5b4fc; }
+
+/* ── Similar fonts section ───────────────────────────────────── */
+.if-similar-section {
+  border-top: 1px solid rgba(79,70,229,0.3);
+}
+
+.if-similar-btn {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #818cf8;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.if-similar-btn:hover { background: rgba(255,255,255,0.05); color: #a5b4fc; }
+
+.if-similar-panel {
+  padding: 0 14px 10px;
+}
+
+.if-similar-cat {
+  font-size: 10px;
+  color: #4f46e5;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  padding-top: 2px;
+}
+
+.if-similar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.if-similar-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.if-similar-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.if-similar-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e0e7ff;
+  white-space: nowrap;
+}
+
+.if-similar-note {
+  display: block;
+  width: 100%;
+  font-size: 10px;
+  color: #6366f1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.if-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex: 0 0 auto;
+}
+.if-badge-free  { background: rgba(34,197,94,0.2);  color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+.if-badge-paid  { background: rgba(251,146,60,0.2); color: #fcd34d; border: 1px solid rgba(251,146,60,0.4); }
+
+.if-copy-import {
+  all: unset;
+  cursor: pointer;
+  color: #6366f1;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+  line-height: 1;
+  margin-top: 1px;
+}
+.if-copy-import:hover { background: rgba(255,255,255,0.1); color: #a5b4fc; }
+
+.if-similar-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #4f46e5;
+  padding: 4px 0;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.if-footer {
+  padding: 7px 14px;
+  font-size: 10px;
+  color: #4f46e5;
+  border-top: 1px solid rgba(79,70,229,0.3);
+  text-align: center;
+}
+
+/* ── Loading state ───────────────────────────────────────────── */
+.if-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+}
+
+.if-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(99,102,241,0.3);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: if-spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+@keyframes if-spin { to { transform: rotate(360deg); } }
+
+/* ── Error state ─────────────────────────────────────────────── */
+.if-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.if-err-msg { flex: 1; color: #fca5a5; font-size: 12px; }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.if-empty {
+  padding: 16px 14px;
+  color: #818cf8;
+  font-size: 12px;
+  text-align: center;
+}

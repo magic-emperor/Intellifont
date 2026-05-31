@@ -1,11 +1,8 @@
 {
   "name": "intellifont-engine",
-  "version": "1.2.0",
-  "description": "High-performance AI-powered visual font identification engine. Now includes AI Similarity Suggestion and Microservice Mode.",
+  "version": "2.0.0",
+  "description": "Visual font identification engine. Identifies fonts from images, documents, URLs, and web pages. Includes hybrid ML matching, browser extensions, and WASM build.",
   "main": "index.js",
-  "bin": {
-    "intellifont": "./index.js"
-  },
   "types": "index.d.ts",
   "napi": {
     "name": "intellifont-engine",
@@ -18,16 +15,25 @@
     "build": "napi build --release",
     "build:debug": "napi build",
     "test": "node test.js",
-    "version": "napi version"
+    "version": "napi version",
+    "build:db": "node ../../../../scripts/build-font-database.js",
+    "build:db:test": "node ../../../../scripts/build-font-database.js --limit 20",
+    "build:db:dryrun": "node ../../../../scripts/build-font-database.js --dry-run",
+    "build:browser-db": "node ../../../../scripts/build-browser-db.js",
+    "build:icons": "node ../../../../scripts/generate-icons.js",
+    "build:extension": "node ../../../../scripts/build-extension.js"
   },
   "keywords": [
     "font",
+    "font-recognition",
+    "font-identification",
     "typography",
+    "image-analysis",
+    "visual-matching",
     "pdf",
-    "resolver",
-    "suggestion",
-    "matching",
-    "google-fonts",
+    "document-analysis",
+    "browser-extension",
+    "wasm",
     "rust",
     "napi"
   ],
@@ -46,14 +52,13 @@
     "intellifont-engine.node",
     "setup.js",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "browser/canvas-dna.js",
+    "browser/intellifont-inspector.js",
+    "browser/image-pipeline.js",
+    "browser/demo.html"
   ],
   "devDependencies": {
     "@napi-rs/cli": "^2.16.0"
-  },
-  "optionalDependencies": {
-    "intellifont-engine-win32-x64-msvc": "0.1.0",
-    "intellifont-engine-darwin-x64": "0.1.0",
-    "intellifont-engine-linux-x64-gnu": "0.1.0"
   }
 }
