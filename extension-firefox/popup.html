@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intellifont</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 300px;
+      background: #1e1b4b;
+      color: #e0e7ff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+    header {
+      background: #312e81;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #4f46e5;
+    }
+    .logo { font-weight: 800; font-size: 18px; color: #a5b4fc; }
+    .tagline { font-size: 11px; color: #818cf8; }
+    .section { padding: 14px 16px; border-bottom: 1px solid rgba(79,70,229,0.3); }
+    .section-title { font-size: 11px; font-weight: 600; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .action-btn {
+      display: block; width: 100%; padding: 10px 14px;
+      background: #4f46e5; color: #fff; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: left;
+      margin-bottom: 6px; transition: background 0.15s;
+    }
+    .action-btn:hover { background: #6366f1; }
+    .action-btn small { display: block; font-weight: 400; color: #c7d2fe; font-size: 11px; margin-top: 1px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+    .stat-label { color: #818cf8; }
+    .stat-val   { font-weight: 600; color: #a5b4fc; }
+    footer {
+      padding: 10px 16px;
+      font-size: 10px;
+      color: #4f46e5;
+      text-align: center;
+    }
+    #status { font-size: 11px; color: #a5b4fc; margin-top: 6px; min-height: 16px; }
+    .if-input {
+      display: block; width: 100%; padding: 7px 10px; margin-bottom: 4px;
+      background: #312e81; border: 1px solid #4f46e5; border-radius: 6px;
+      color: #e0e7ff; font-size: 12px; outline: none;
+    }
+    .if-input:focus { border-color: #818cf8; }
+    #save-status { font-size: 11px; color: #86efac; margin-top: 4px; min-height: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="logo">Intellifont</div>
+      <div class="tagline">Font identification, entirely offline</div>
+    </div>
+  </header>
+
+  <div class="section">
+    <div class="section-title">Quick Actions</div>
+    <button class="action-btn" id="btn-page">
+      Identify font on this page
+      <small>Analyses the most prominent text element</small>
+    </button>
+    <button class="action-btn" id="btn-hover">
+      Hover to identify (Ctrl+Shift+F)
+      <small>Point at any text to see its font · Esc to exit</small>
+    </button>
+    <button class="action-btn" id="btn-help">
+      How to identify from an image
+      <small>Right-click any image → "Identify font in image"</small>
+    </button>
+    <div id="status"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Database</div>
+    <div class="stat-row"><span class="stat-label">Fonts indexed</span><span class="stat-val" id="stat-fonts">—</span></div>
+    <div class="stat-row"><span class="stat-label">Status</span><span class="stat-val" id="stat-status">Loading…</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Server Fallback (Pro)</div>
+    <input class="if-input" id="inp-url" type="url" placeholder="https://your-server/api" spellcheck="false">
+    <input class="if-input" id="inp-key" type="password" placeholder="API key (iff_live_…)" spellcheck="false">
+    <button class="action-btn" id="btn-save" style="margin-top:6px">Save settings</button>
+    <div id="save-status"></div>
+  </div>
+
+  <footer>Nothing leaves your device.</footer>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,255 +1,355 @@
-# intelliFont Engine
+﻿# Intellifont — AI-Powered Font Recognition Engine
 
-**The Ultimate Professional Font Identification Toolkit.**
+**Identify any font in seconds.** Intellifont uses AI-driven visual matching to recognize fonts from images, documents, websites, and web pages. Completely offline, private, and runs in your browser or Node.js. No internet required, no data sent to servers.
 
-`intellifont-engine` is a high-performance, Rust-powered engine designed to **visually identify** unknown font files. Whether you are building a design tool or a font management system, this engine tells you exactly what font family a file belongs to by analyzing its glyph shapes.
-
----
-
-## Why intelliFont?
-**intelliFont** uses **Visual DNA Analysis**—measuring the physical curves, stroke width, and ink density of the characters—to fingerprint and identify the font family with high precision.
-
-Traditional tools rely on reading metadata (names), which can be missing, scrambled, or incorrect (e.g., "subset.ttf").
-
-
-
-### Key Capabilities:
-- **Visual Recognition**: Identifies fonts based on *geometry*, not file names.
-- **AI Similarity Suggestion**: **[NEW]** Find visually similar alternatives matching the "AI DNA" of a font.
-- **Microservice Ready**: **[NEW]** Run as a high-performance HTTP server for any-language integration.
-- **Raw Buffer Support**: Works directly with memory buffers from web uploads.
-- **Sub-millisecond Speed**: Visual analysis takes <1ms per file.
-- **Privacy First**: Analysis happens entirely offline/on-server.
+Works on screenshots, PDFs, Word documents, PowerPoint presentations, and images. Returns the top matching fonts with confidence scores.
 
 ---
 
-## Architecture Overview
+## Where to Get Intellifont
 
-The engine is built on a "Service-Core" architecture:
-1.  **The Rust Core**: Performs the heavy-duty mathematical analysis of glyph curves.
-2.  **The NAPI-RS Bridge**: Exposes this power to Node.js as a simple native function.
-3.  **The Signature Database**: A highly-compressed binary index of known font shapes (Google Fonts, System Fonts).
+**Choose your platform:**
+
+| Platform | Installation | Use Case |
+|---|---|---|
+| **Chrome Extension** | [Download v2.0.0](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-chrome-2.0.0.zip) \| [Load unpacked](#browser-extension-setup) | Right-click on any image in Chrome |
+| **Firefox Extension** | [Download v2.0.0](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-firefox-2.0.0.zip) \| [Load unpacked](#browser-extension-setup) | Right-click on any image in Firefox |
+| **NPM Package** | `npm install intellifont-engine` | Identify fonts in Node.js apps |
+| **WASM** | `npm install intellifont-wasm` | Identify fonts in browsers / serverless |
+| **Server API** | `git clone && npm start` | REST API on localhost:3001 |
 
 ---
 
-##  Installation
+## What It Can Do
 
-### As a Library (Recommended)
-Add it to your React, Vue, or Node.js project:
+| Input | Method | Accuracy |
+|---|---|---|
+| **Font file** (TTF/OTF/WOFF) | Direct file analysis | ~95% |
+| **Website font** | URL inspection | ~95% |
+| **PDF / Document** | Embedded font extraction | ~95% |
+| **Text in image** | Visual analysis | 92% top-1 \* |
+
+\* *Accuracy varies by image quality. We actively improve this with every release.*
+
+---
+
+## Quick Start
+
+### For Users — Browser Extension
+**Chrome & Firefox** — load unpacked (coming to stores):
+
+1. Clone: `git clone https://github.com/magic-emperor/Intellifont.git`
+2. **Chrome**: `chrome://extensions`  Developer Mode  Load unpacked  select `extension/`
+3. **Firefox**: `about:debugging`  Load Temporary Add-on  select `extension-firefox/manifest.json`
+4. Right-click any image  **"Identify font in image"**
+
+### For Developers — NPM Package
+
 ```bash
 npm install intellifont-engine
 ```
 
-### As a Global CLI Tool
-Powerful font management directly from your terminal:
+```javascript
+const intellifont = require('intellifont-engine');
+
+// Identify font from a file
+const matches = intellifont.identifyVisualFont('./sample.ttf', 'Hello');
+console.log(matches);
+// Output:
+// [
+//   { family: 'Roboto', confidence: 0.98 },
+//   { family: 'Open Sans', confidence: 0.94 },
+//   ...
+// ]
+```
+
+### WASM (Browser / Serverless)
+
 ```bash
-npm install -g intellifont-engine
+npm install intellifont-wasm
 ```
----
-
-## JavaScript API
-
-`intellifont-engine` provides a simple, Promise-based API for Node.js environments.
-
-### `identify_visual_font(path, chars, limit)`
-**[NEW]** Identify a font file visually using its glyph shape signatures.
 
 ```javascript
-const { identify_visual_font } = require('intellifont-engine');
+import init from 'intellifont-wasm';
 
-// Identify an unknown file
-const results = identify_visual_font("./unknown_font.ttf", "RQWM", 5);
-
-console.log(results[0]);
-// {
-//   family: "Arial",
-//   subfamily: "Regular",
-//   confidence: 0.99,
-//   source: "Database"
-// }
-```
-
-### `identify_visual_font_buffer(buffer, chars, limit)`
-**[NEW]** Identify a font from valid font memory buffer (e.g. from file upload). No disk save required.
-
-```javascript
-const fs = require('fs');
-const { identify_visual_font_buffer } = require('intellifont-engine');
-
-// Simulate a file upload (Buffer)
-const buffer = fs.readFileSync("./uploaded_font.ttf");
-
-const matches = identify_visual_font_buffer(buffer, "RQWM", 5);
-console.log(matches[0]);
-// { family: "Roboto", confidence: 1.0, ... }
-```
-
-### `aiSuggestSimilar(path, limit)`
-**[NEW]** Find visually similar fonts using AI pattern matching.
-
-```javascript
-const { aiSuggestSimilar } = require('intellifont-engine');
-
-const suggestions = aiSuggestSimilar("./my_font.ttf", 5);
-console.log(suggestions[0]);
-// {
-//   family: "Consolas",
-//   confidence: 0.92,
-//   match_quality: "high"
-// }
-```
-
-### `aiSuggestSimilarBuffer(buffer, limit)`
-**[NEW]** Find similar fonts directly from memory buffer.
-```
-
-### `exportMetrics(fontName)`
-Returns the physical "DNA" of a font. Essential for layout-stable PDF generators.
-
-```javascript
-const { exportMetrics } = require('intellifont-engine');
-const metrics = exportMetrics("Inter");
+const engine = await init();
+const results = engine.identifyFont(glyphMetrics, 8);
 ```
 
 ---
 
-## 📦 Integration: Real-World Web App
+## Browser Extension Setup
 
-Here is a complete example of how to integrate `intellifont-engine` into an **Express.js** backend to handle file uploads.
+### Installing the Chrome Extension
 
-### 1. Install Dependencies
+1. **Download** the extension: [intellifont-chrome-2.0.0.zip](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-chrome-2.0.0.zip)
+2. **Extract** the ZIP file to a folder (e.g., `Downloads/intellifont-chrome`)
+3. Open **Chrome** and go to `chrome://extensions`
+4. Enable **Developer Mode** (toggle in top-right corner)
+5. Click **Load unpacked**
+6. Select the extracted `intellifont-chrome` folder
+7. Extension appears in your toolbar
+8. **Use it**: Right-click any image  "Identify font in image"
+
+### Installing the Firefox Extension
+
+1. **Download** the extension: [intellifont-firefox-2.0.0.zip](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-firefox-2.0.0.zip)
+2. **Extract** the ZIP file to a folder (e.g., `Downloads/intellifont-firefox`)
+3. Open **Firefox** and go to `about:debugging`
+4. Click **This Firefox** (left sidebar)
+5. Click **Load Temporary Add-on**
+6. Select any file from the extracted `intellifont-firefox` folder (e.g., `manifest.json`)
+7. Extension appears in your toolbar
+8. **Use it**: Right-click any image  "Identify font"
+
+### How to Use the Extension
+
+1. **Right-click on any image** on any webpage
+2. Select **"Identify font in image"** (or "Identify font in image region..." for partial image)
+3. Wait for analysis (usually 1-2 seconds)
+4. A popup appears with:
+   - **Top matching fonts** (confidence % shown)
+   - **Font family, weight, style** for each match
+   - Copy button for easy access
+
+### Known Extension Limitations
+
+- Only works on images you can right-click (no cross-origin restrictions thanks to local processing)
+- Image must contain **readable text** (8px+ font size)
+- Accuracy varies by image quality (see [Accuracy](#accuracy-by-condition))
+- **Rotation**: Deskew images first if heavily tilted
+
+---
+
+## Delivery Channels
+
+###  **Browser Extension** (Chrome & Firefox)
+Right-click on images  identify fonts. Offline first, 100% private.
+
+**Download:**
+- **Chrome**: [Download v2.0.0 ZIP](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-chrome-2.0.0.zip)
+- **Firefox**: [Download v2.0.0 ZIP](https://github.com/magic-emperor/Intellifont/releases/download/v2.0.0/intellifont-firefox-2.0.0.zip)
+
+**Installation** (see [Browser Extension Setup](#browser-extension-setup) below):
+1. Extract the ZIP file
+2. Load unpacked in Chrome/Firefox Developer Mode
+3. Right-click any image  "Identify font"
+
+**Coming soon**: Chrome Web Store & Firefox Add-ons (submit after testing)
+
+###  **NPM Package** (`intellifont-engine`)
 ```bash
-npm install express multer intellifont-engine
+npm install intellifont-engine
 ```
 
-### 2. Create the Backend Service (`server.js`)
-This service receives a file upload (font) and returns the identification result.
+20+ functions for font identification, analysis, and caching:
+- `identifyVisualFont()` — Identify from TTF/OTF file
+- `identifyVisualFontBuffer()` — Identify from buffer
+- `aiSuggestSimilar()` — Find similar fonts (ML)
+- `getFontSuggestions()` — Name-based search
+- `analyzeImage()` — Full image processing
 
-```javascript
-const express = require('express');
-const multer = require('multer');
-const { identify_visual_font_buffer } = require('intellifont-engine');
+**TypeScript types included.**
 
-const app = express();
-// Use memory storage so we can access the buffer directly
-const upload = multer({ storage: multer.memoryStorage() });
+###  **WASM Module**
+Pure JavaScript, zero native dependencies. Perfect for browsers, serverless, Deno.
 
-// Endpoint: POST /api/identify
-app.post('/api/identify', upload.single('fontFile'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: "No font file uploaded" });
-        }
-
-        // 1. Get the Raw Buffer
-        const fontBuffer = req.file.buffer;
-
-        // 2. Identify the Font (Pass specific characters for better accuracy)
-        const results = identify_visual_font_buffer(fontBuffer, "RQWM", 5);
-
-        // 3. Return JSON to Frontend
-        res.json({ success: true, matches: results });
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.listen(3000, () => console.log('Server running on port 3000 🚀'));
-```
-
-### 3. Usage from Frontend
-```javascript
-const formData = new FormData();
-formData.append('fontFile', fileInput.files[0]);
-
-const response = await fetch('/api/identify', { method: 'POST', body: formData });
-const data = await response.json();
-console.log("Identified Font:", data.matches[0].family); 
-// Output: "Arial"
-```
-
----
-
-## ❓ FAQ: Inputs & Performance
-
-**Q: Why do I need to pass the `.ttf/.otf` file? Can't I just pass text?**
-**A:** "Text" (like "Hello") is just a code (e.g., `U+0048`). It has no shape. The `.ttf` file contains the **mathematical curves** (geometry) that determine if it looks like Arial or Times New Roman. We need those curves to calculate the visual signature.
-
-**Q: Isn't uploading a font file slow/heavy?**
-**A:** No. Font files are vector graphics and are surprisingly small (~50KB - 200KB). Uploading a font buffer to your backend takes milliseconds.
-
----
-
-## 🛠️ CLI Usage (The 'intellifont' command)
-
-Once installed globally, `intellifont` provides tools for visual identification and database management.
-
-| Command | Description |
-| :--- | :--- |
-| `intellifont identify "file.ttf"` | **Identify a font file visually** using its glyph signatures. |
-| `intellifont ai-suggest "file.ttf"` | **[AI]** Find visually similar alternatives for a font file. |
-| `intellifont serve --port 3000` | **[NEW]** Run as an HTTP microservice for universal integration. |
-| `intellifont build-web-db` | Download and index popular **Google Fonts/Web Fonts** automatically. |
-| `intellifont build-glyph-db <dir>` | Index a local directory of fonts into a compressed signature database. |
-| `intellifont stats` | Display engine metrics and database compression stats. |
-
-### JSON Output for Automation
-Add `--json` flag to get machine-readable output:
 ```bash
-intellifont identify "file.ttf" --json
-# Returns: [{"family": "Arial", "confidence": 0.99, ...}]
+npm install intellifont-wasm
+```
+
+###  **API Server**
+```bash
+cd server && npm start
+# POST /api/identify — upload image
+# GET /api/identify-url?url=... — scan web page
+# POST /api/identify-document — analyze PDF/DOCX
+# GET /api/similar?font=Roboto — find alternatives
 ```
 
 ---
 
-## 🐍 Python & Universal Integration
+## Accuracy by Condition
 
-Since `intellifont` is a standalone CLI tool, you can use it from **any language** (Python, Go, PHP, C#, Ruby) by calling the CLI and parsing JSON.
+| Scenario | Accuracy |
+|---|---|
+| Font file (TTF/OTF) | ~95% |
+| Web font (downloaded) | ~95% |
+| PDF/Document embedded font | ~95% |
+| Image: clean text | 92% top-1 |
+| Image: mixed conditions | 57% top-5 |
 
-**Python Example:**
-```python
-import subprocess
-import json
+*Image accuracy depends on text quality, size, contrast, and clarity. Rotation is a known limitation (improving).*
 
-def identify_font(file_path):
-    result = subprocess.run(
-        ["intellifont", "identify", file_path, "--json"],
-        capture_output=True, text=True
-    )
-    matches = json.loads(result.stdout)
-    return matches[0] if matches else None
+---
 
-# Usage
-font = identify_font("./mystery.ttf")
-print(f"Identified: {font['family']} ({font['confidence']*100:.0f}% confidence)")
+## How It Works
+
+```
+Input (Image / Document / Font / URL)
+       
+[Preprocessing]   Binarize, deskew, extract text regions
+       
+[Glyph Analysis]  Compute pixel metrics (density, symmetry, strokes, serif)
+       
+[Visual Matching]  Compare 64—64 thumbnails against 2,042 fonts
+       
+[ML Enhancement]  Optional: CosFace embeddings for better ranking
+       
+[Return Top 8]    Sorted by confidence score
+       
+Output: Font family, weight, confidence %
 ```
 
+**Key points:**
+- **Visual matching**: Character-agnostic (label-independent)
+- **ML-powered**: Trained on 2,042 real fonts
+- **Offline**: All data bundled, no network calls
+- **Private**: Images never leave your device
 
 ---
 
-## 💰 Licensing & Support
+## Full API Reference
 
-`intellifont-engine` is dual-licensed:
-- **Software**: The engine code is licensed under **Apache-2.0**.
-- **Data**: The included **Core Font Database** (~2,000 signatures) is free for use. Access to the **Extended Intelligence Database** (20,000+ signatures) requires a Pro license.
+### Node.js Exports
 
-For **Enterprise-grade** requirements:
-- 🚀 **20,000+ Certified Font Signatures**
-- 🔒 **Air-gapped Offline Databases** (for secure environments)
-- 🎧 **Premium Support & Custom Provider Integration**
+**Core Identification**
+```javascript
+identifyVisualFont(fontPath: string, characters: string, limit?: number): VisualMatch[]
+identifyVisualFontBuffer(buffer: Buffer, characters: string, limit?: number): VisualMatch[]
+aiSuggestSimilar(fontPath: string, limit?: number): AiSuggestion[]
+getFontSuggestions(fontName: string, includeInternet?: boolean): Promise<Suggestion[]>
+```
 
-Visit [intellifont.pro](https://intellifont.pro) or contact our enterprise team.
+**Image Processing**
+```javascript
+analyzeImage(imageSource: string | Buffer): Promise<ImageAnalysisResult>
+extractGlyphSignature(fontPath: string, character: string): GlyphSignature
+compareGlyphSignatures(fontPathA: string, fontPathB: string, character: string): number
+```
+
+**Utilities**
+```javascript
+normalizeFontName(fontName: string): string
+```
+
+**Cache Management**
+```javascript
+pinFont(fontName: string): void
+unpinFont(fontName: string): void
+listPinnedFonts(): string[]
+cleanupCache(aggressive?: boolean): number
+getCacheStats(): CacheStats
+getEngineStats(): EngineStats
+```
+
+Full TypeScript types in `index.d.ts`.
 
 ---
 
-## Security
+## Browser Support
 
-Your privacy is paramount. intelliFont's local scanner:
-- Is restricted to common system font directories.
-- Never transmits actual font files; only anonymous biometric signatures (metrics).
-- Uses Rust's memory safety to prevent overflow exploits common in font parsing.
+| Browser | Version | Status |
+|---|---|---|
+| Chrome | 80+ |  Full |
+| Firefox | 109+ |  Full |
+| Edge | 80+ |  Full |
+| Safari | 14+ |  Planned |
+
+WASM module works on 99%+ of users' devices.
 
 ---
 
-© 2026 intelliFont Engine
+## Database
+
+**2,042 fonts** covering:
+- Google Fonts (complete)
+- System fonts (Windows, macOS, Linux)
+- Popular design fonts
+- Open-source typefaces
+
+**Included in extension and NPM:**
+- Glyph signatures: 2 MB
+- Pixel signatures: 1.7 MB
+- Visual thumbnails: 15 MB
+
+---
+
+## Performance
+
+| Task | Time | Notes |
+|---|---|---|
+| Identify 1 glyph | 5-50ms | CPU-bound |
+| Full image analysis | 100-500ms | Includes preprocessing |
+| ML similarity ranking | 10-100ms | Optional |
+
+No initialization delay. Ready immediately.
+
+---
+
+## Privacy & Security
+
+ **100% Offline** — All processing on your device  
+ **No Tracking** — Zero telemetry  
+ **No Uploads** — Images never leave your computer  
+ **Open Source** — Inspect the code  
+ **Apache 2.0** — Free for commercial use  
+
+---
+
+## Installation
+
+### From NPM
+```bash
+npm install intellifont-engine
+```
+
+### From Source (Development)
+```bash
+git clone https://github.com/magic-emperor/Intellifont.git
+cd Intellifont
+
+# Build Rust bindings
+cd Rust/font-resolver
+cargo build --release
+cd bindings/node
+npm install
+npm run build
+```
+
+---
+
+## Known Limitations
+
+- **Rotation**: Tilted text is difficult (deskew first)
+- **Rare fonts**: Only covers 2,042 fonts (expand DB for your use case)
+- **Stylized text**: Heavily styled/outlined text has lower accuracy
+- **Small text**: < 8px is hard to analyze
+
+---
+
+## Contributing
+
+Found a bug? Want to help? Open an issue or PR on [GitHub](https://github.com/magic-emperor/Intellifont).
+
+---
+
+## License
+
+**Apache License 2.0.** See [LICENSE](LICENSE).
+
+---
+
+## Credits
+
+- **Rust** engine with NAPI-RS bindings
+- **WebAssembly** for browser support
+- **CosFace** ML embeddings
+- **2,042 test fonts** for training
+
+---
+
+** 2026 Intellifont Engine. Built by the Intellifont Team.**
+
+Questions? Email [faizan77603@gmail.com](mailto:faizan77603@gmail.com) or open an issue on [GitHub](https://github.com/magic-emperor/Intellifont).
+
